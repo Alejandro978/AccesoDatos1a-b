@@ -1,6 +1,8 @@
 package gestionficherosapp;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 import gestionficheros.FormatoVistas;
 import gestionficheros.GestionFicheros;
@@ -60,20 +62,52 @@ public class GestionFicherosImpl implements GestionFicheros {
 	public void creaCarpeta(String arg0) throws GestionFicherosException {
 		File file = new File(carpetaDeTrabajo, arg0);
 		// que se pueda escribir -> lanzará una excepción
+		if (!file.canWrite())
+			throw new GestionFicherosException("Error. No tiene permisos de escritura");
 		// que no exista -> lanzará una excepción
+		if (file.exists()) {
+			throw new GestionFicherosException("Error. Ya existe una carpeta con este nombre");
+		}
 		// crear la carpeta -> lanzará una excepción
+		try {
+
+			file.mkdir();
+
+		} catch (SecurityException e) {
+			throw new GestionFicherosException("El nombre del archivo no es válido");
+		}
 		actualiza();
 	}
 
 	@Override
 	public void creaFichero(String arg0) throws GestionFicherosException {
-		// TODO Auto-generated method stub
+		File file = new File(carpetaDeTrabajo, arg0);
+		// que se pueda escribir -> lanzará una excepción
+		if (!carpetaDeTrabajo.canWrite())
+			throw new GestionFicherosException("Error. No tiene permisos de escritura");
+		// que no exista -> lanzará una excepción
+		if (file.exists()) {
+			throw new GestionFicherosException("Error. Ya existe una fichero con este nombre");
+		}
+		// crear la carpeta -> lanzará una excepción
+		try {
+			file.createNewFile();
+
+		} catch (IOException e) {
+			throw new GestionFicherosException("El nombre del archivo no es válido");
+		}
+		actualiza();
 
 	}
 
 	@Override
 	public void elimina(String arg0) throws GestionFicherosException {
-		// TODO Auto-generated method stub
+		File file = new File(carpetaDeTrabajo, arg0);
+		if (!file.canWrite())
+			throw new GestionFicherosException("No tiene permisos para realizar esta acción");
+
+		if (!file.exists())
+			throw new GestionFicherosException("El archivo que intenta eliminar no existe o ya ha sido eliminado");
 
 	}
 
@@ -142,7 +176,8 @@ public class GestionFicherosImpl implements GestionFicheros {
 
 		// Controlar que existe. Si no, se lanzará una excepción
 		if (!file.exists()) {
-			throw new GestionFicherosException("Error. El fichero al que intenta acceder no existe o ha sido borrado");
+			throw new GestionFicherosException("Error. El fichero" + file.getAbsolutePath()
+					+ "al que intenta acceder no existe o ha sido borrado");
 		} else {
 			// Controlar que haya permisos de lectura. Si no, se lanzará una excepción
 			if (!file.canRead()) {
@@ -162,15 +197,18 @@ public class GestionFicherosImpl implements GestionFicheros {
 					strBuilder.append("Tipo archivo: Directorio");
 					strBuilder.append("\n");
 					// Si es directorio: Número de elementos que contiene,
-					strBuilder.append("Este directorio tiene: " + file.listFiles() + "elementos");
+					strBuilder.append("Este directorio tiene: " + file.list().length + " elementos");
 					// Si es directorio: Espacio libre, espacio disponible, espacio total (bytes)
+					strBuilder.append(" El espacio libre es : " + file.getFreeSpace());
+					strBuilder.append("\n");
+					strBuilder.append(" El espacio disponible es : " + file.getUsableSpace());
 
 				} else {
 					if (file.isFile()) {
 						strBuilder.append("Tipo de archivo: Fichero");
 						strBuilder.append("\n");
 						// Si es un fichero: Tamaño en bytes
-						strBuilder.append("El tamaño de este fichero en bytes es : " + file.getTotalSpace());
+						strBuilder.append("El tamaño de este fichero en es : " + file.length() + "bytes");
 					}
 				}
 
@@ -179,7 +217,8 @@ public class GestionFicherosImpl implements GestionFicheros {
 				strBuilder.append(" Ruta : " + file.getAbsolutePath());
 				strBuilder.append("\n");
 				// Fecha de última modificación
-				strBuilder.append("Última modificación: " + file.lastModified());
+				SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+				strBuilder.append("Última modificación: " + sdf.format(file.lastModified()));
 				strBuilder.append("\n");
 				// Si es un fichero oculto o no
 				if (file.isHidden()) {
@@ -235,8 +274,31 @@ public class GestionFicherosImpl implements GestionFicheros {
 
 	@Override
 	public void renombra(String arg0, String arg1) throws GestionFicherosException {
-		// TODO Auto-generated method stub
-
+		File file = new File(carpetaDeTrabajo, arg0);
+		File file1 = new File(carpetaDeTrabajo, arg1);
+		
+		if(!file.exists()) {
+			
+			throw new GestionFicherosException("El fichero " + arg0 + " no exixte.");	
+			
+		} 
+		if(!carpetaDeTrabajo.canWrite()){
+			
+			throw new GestionFicherosException("No tiene permiso para renombrar " + arg0);
+			
+		} 
+		
+		if(file1.exists()){
+			throw new GestionFicherosException(arg0 + " ya exsiste.");
+			}else {
+				
+				try{
+					file.renameTo(file1);
+					}catch(Exception GestionFicherosException) {
+						throw new GestionFicherosException("Error al modificar el ficheto" + arg0 + ".txt");
+					}
+				}
+		actualiza();
 	}
 
 	@Override
